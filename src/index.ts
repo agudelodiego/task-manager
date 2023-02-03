@@ -1,33 +1,16 @@
-import express from "express";
-import {config} from "dotenv";
-config();
+import { launchServer } from "./utils/launchServer";
 
 // Interfaces
 import { Endpoint } from "./interfaces/endpoint";
 
 // Routes
-import { tasksRouter } from "./routes/tasks";
-
-// Router
-import { appRouter } from "./appRouter";
-
-// Utils
-import { showconfig } from "./utils/showconfig";
+import { tasksRouter } from "./routes/tasks.route";
+import { usersRouter } from "./routes/users.route";
+import { chatsRouter } from "./routes/chats.route";
 
 
 
-// App
-const app = express();
-
-// Port where ther server will up
-const PORT = process.env.PORT || 3000;
-
-
-// Global middlewares
-app.use(express.json());
-
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
-//* ENDPOINTS
+// ENDPOINTS
 const appRoutes:Endpoint[] = [
   {
     path:"/api/v1/tasks",
@@ -35,18 +18,14 @@ const appRoutes:Endpoint[] = [
   },
   {
     path:"/api/v1/users",
-    handler: tasksRouter
+    handler: usersRouter
+  },
+  {
+    path:"/api/v1/chats",
+    handler: chatsRouter
   }
 ];
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
-//* Perform the Routing
-appRouter(appRoutes,app);
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-app.listen(PORT);
-showconfig(PORT,appRoutes);
+//! Launching the server
+launchServer(appRoutes);

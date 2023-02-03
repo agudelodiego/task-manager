@@ -5,9 +5,12 @@ exports.showconfig = void 0;
 const showconfig = (port, appRoutes) => {
     console.log("------------ SERVER STATE ------------");
     console.log("");
-    console.log(`Server up on port: ${port}`);
-    console.log("Endpoints availables:");
+    console.log(` Server up on port: ${port}`);
+    console.log("");
+    console.log(" Endpoints availables:");
     appRoutes.forEach((endpoint) => { console.log(`    endpoint --> ${endpoint.path}`); });
+    console.log("");
+    console.log(` Database url: ${process.env.MONGOURL || "No set yet"}`);
     console.log("");
     console.log("---------------------------------------");
 };

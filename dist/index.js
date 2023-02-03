@@ -1,39 +1,24 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const dotenv_1 = require("dotenv");
-(0, dotenv_1.config)();
+const launchServer_1 = require("./utils/launchServer");
 // Routes
-const tasks_1 = require("./routes/tasks");
-// Router
-const appRouter_1 = require("./appRouter");
-// Utils
-const showconfig_1 = require("./utils/showconfig");
-// App
-const app = (0, express_1.default)();
-// Port where ther server will up
-const PORT = process.env.PORT || 3000;
-// Global middlewares
-app.use(express_1.default.json());
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
-//* ENDPOINTS
+const tasks_route_1 = require("./routes/tasks.route");
+const users_route_1 = require("./routes/users.route");
+const chats_route_1 = require("./routes/chats.route");
+// ENDPOINTS
 const appRoutes = [
     {
         path: "/api/v1/tasks",
-        handler: tasks_1.tasksRouter
+        handler: tasks_route_1.tasksRouter
     },
     {
         path: "/api/v1/users",
-        handler: tasks_1.tasksRouter
+        handler: users_route_1.usersRouter
+    },
+    {
+        path: "/api/v1/chats",
+        handler: chats_route_1.chatsRouter
     }
 ];
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
-//* Perform the Routing
-(0, appRouter_1.appRouter)(appRoutes, app);
-//*--------------------------------------------------------------------------------------------------------------------------------------------------------------
-app.listen(PORT);
-(0, showconfig_1.showconfig)(PORT, appRoutes);
+//! Launching the server
+(0, launchServer_1.launchServer)(appRoutes);
