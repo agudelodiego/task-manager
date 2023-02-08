@@ -1,9 +1,10 @@
+//! This is the main function. This will be perfom the database conection and aply some global middlewares
 import { launchServer } from "./utils/launchServer";
 
 // Interfaces
 import { Endpoint } from "./interfaces/endpoint";
 
-// Routes
+// API Routes
 import { tasksRouter } from "./routes/tasks.route";
 import { usersRouter } from "./routes/users.route";
 import { chatsRouter } from "./routes/chats.route";

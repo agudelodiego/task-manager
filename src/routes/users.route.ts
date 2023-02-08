@@ -5,9 +5,10 @@ import { Router } from "express";
 import {
   getUsers,
   getUser,
-  createUser,
+  signup,
   deleteUser,
-  updateUser
+  updateUser,
+  login
 } from "../controllers/users.controller";
 
 
@@ -17,7 +18,8 @@ export const usersRouter = Router();
 
 // Routes
 usersRouter.route("/").get(getUsers);
-usersRouter.route("/").post(createUser);
+usersRouter.route("/signup").post(signup);
+usersRouter.route("/login").post(login)
 usersRouter.route("/:id").get(getUser);
 usersRouter.route("/:id").patch(updateUser);
 usersRouter.route("/:id").delete(deleteUser);

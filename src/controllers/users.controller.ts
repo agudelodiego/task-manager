@@ -20,8 +20,13 @@ export const getUsers = (req:Request,res:Response) => {
 };
 
 
-export const createUser = (req:Request,res:Response) =>{
+export const signup = (req:Request,res:Response) =>{
   res.status(201).json({result:"User created correctly"})
+};
+
+
+export const login = (req:Request,res:Response) => {
+  res.json({result:"Login works"})
 };
 
 
