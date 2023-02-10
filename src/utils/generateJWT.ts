@@ -1,5 +1,5 @@
 import { SignJWT } from "jose";
-import { JWTconfig } from "../interfaces/JWTconfig";
+import { JWTconfig } from "../interfaces/JWT";
 
 const KEY = new TextEncoder().encode(process.env.KEY);
 

@@ -1,31 +1,35 @@
-import { Request, Response } from "express";
+// Model
 import { UserModel } from "../models/user.model";
+
+//Interfaces
 import { loginData } from "../interfaces/login";
-import { JWTconfig } from "../interfaces/JWTconfig";
-import { generateJWT } from "../utils/generateJWT";
+import { JWTconfig } from "../interfaces/JWT";
 import { signupData } from "../interfaces/signup";
+import { Request, Response } from "express";
+
+// Library for encryp the passwords
 import argon2 from "argon2";
 
+// Utils
+import { generateJWT } from "../utils/generateJWT";
+import { internalError } from "../utils/errors";
 
 
-export const getUsers = (req:Request,res:Response) => {
-  const users = [
-    {
-      name:"lkas",
-      age:23,
-      email:"jaslda@jalsdj.asd",
-      password:"aslkdlaksdjalk"
-    },
-    {
-      name:"lkas",
-      age:23,
-      email:"jaslda@jalsdj.asd",
-      password:"aslkdlaksdjalk"
+
+export const searchUsers = async (req:Request,res:Response) => {
+  try{
+    let {username} = req.query;
+    const users = await UserModel.find({ username: { $regex: new RegExp(`^${username}.*`, 'i') } }, "username email");
+    if(users.length < 1){
+      return res.status(404).json({error:`Not found user with username: ${username}`})
     }
-  ];
-  res.json(users);
-};
-
+    return res.json(users);
+  }
+  catch(error){
+    console.log(`Error in users.controller.ts -> searchUsers - 35 ${error} `);
+    return res.status(500).json(internalError);
+  }
+}
 
 
 export const signup = async (req:Request,res:Response) =>{
@@ -53,7 +57,7 @@ export const signup = async (req:Request,res:Response) =>{
   }
   catch(error){
     console.log(`Error in user.controller.ts -> signup - 54 ${error}`)
-    return res.status(500).json({error:"Internal server error"});
+    return res.status(500).json(internalError);
   }
 };
 
@@ -102,19 +106,32 @@ export const login = async (req:Request,res:Response) => {
   }
   catch(error){
     console.log(`Error in user.controller.ts -> login -95 ${error}`);
-    return res.status(500).json({error:"Internal server error"});
+    return res.status(500).json(internalError);
   }
 };
 
 
-export const getUser = (req:Request,res:Response) => {
-  const user = {
-    name:"lkas",
-    age:23,
-    email:"jaslda@jalsdj.asd",
-    password:"aslkdlaksdjalk"
+export const logout = (req:Request,res:Response) =>{
+  res.clearCookie("jwt");
+  return res.status(200).json({message:"Logout successful"})
+}
+
+
+export const getUser = async(req:Request,res:Response) => {
+  try{
+    let {username} = req.params;
+    let user = await UserModel.findOne({username},"username email");
+
+    if(!user){
+      return res.status(404).json({error:`Not found user with username: ${username}`})
+    }
+
+    return res.send(user);
   }
-  res.json(user);
+  catch(error){
+    console.log(`Error in user.controller.ts -> getUser -116 ${error}`);
+    return res.status(500).json(internalError);
+  }
 };
 
 
