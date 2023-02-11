@@ -2,9 +2,7 @@ import { NextFunction,Request,Response }  from "express";
 import { authJWT } from "../interfaces/JWT";
 import { jwtVerify } from "jose";
 import { internalError } from "../utils/errors";
-
-
-const KEY = new TextEncoder().encode(process.env.KEY);
+import { KEY } from "../utils/KEY";
 
 
 export const authJWTmdware = async(req:Request,res:Response,next:NextFunction) =>{
@@ -27,5 +25,4 @@ export const authJWTmdware = async(req:Request,res:Response,next:NextFunction) =
     return res.status(500).json({internalError})
   }
   
-  
-}
+};

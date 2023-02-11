@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import { User } from "../interfaces/userInterfaces";
 
 
-export const userSchema = new mongoose.Schema({
+export const userSchema = new mongoose.Schema<User>({
   username:{
     type:String,
     unique:true,
@@ -30,9 +31,9 @@ export const userSchema = new mongoose.Schema({
     type:Boolean,
     default:false
   },
-  friends:Array,
-  chats:Array,
-  task:Array
+  friends:[String],
+  chats:[String],
+  tasks:[String]
 });
 
 

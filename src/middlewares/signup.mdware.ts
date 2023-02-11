@@ -7,7 +7,7 @@ export const signupMdware = (req:Request,res:Response,next:NextFunction) =>{
   const isValidRequest = signupValidate(req.body);
 
   if(!isValidRequest){
-    return res.status(400).json({error:"The reques doesnt have correct structure"});
+    return res.status(400).json({errors:signupValidate.errors?.map((error)=>error.message)});
   }
   else{
     return next();

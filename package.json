@@ -19,10 +19,12 @@
   },
   "dependencies": {
     "@types/ajv": "1.0.0",
+    "@types/ajv-errors": "2.0.1",
     "@types/argon2": "0.15.0",
     "@types/cookie-parser": "1.4.3",
     "@types/node-jose": "1.1.10",
     "ajv": "8.12.0",
+    "ajv-errors": "3.0.0",
     "ajv-formats": "2.1.1",
     "argon2": "0.30.3",
     "cookie-parser": "1.4.6",

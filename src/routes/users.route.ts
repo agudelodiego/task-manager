@@ -4,7 +4,8 @@ import { Router } from "express";
 // Import some middlewares
 import { loginMdware } from "../middlewares/login.mdware";
 import { signupMdware } from "../middlewares/signup.mdware";
-import { searchUserMdware } from "../middlewares/users.mdware";
+import { searchUserMdware, updateUserMdware } from "../middlewares/users.mdware";
+import { authJWTmdware } from "../middlewares/authJWT.mdware";
 
 // Import our controllers
 import {
@@ -16,7 +17,6 @@ import {
   searchUsers,
   logout
 } from "../controllers/users.controller";
-import { authJWTmdware } from "../middlewares/authJWT.mdware";
 
 
 // Create our router
@@ -29,5 +29,5 @@ usersRouter.route("/signup").post(signupMdware,signup);
 usersRouter.route("/login").post(loginMdware,login);
 usersRouter.route("/logout").get(logout);
 usersRouter.route("/:username").get(authJWTmdware,getUser);
-usersRouter.route("/:id").patch(updateUser);
+usersRouter.route("/:username").patch(authJWTmdware,updateUserMdware,updateUser);
 usersRouter.route("/:id").delete(deleteUser);

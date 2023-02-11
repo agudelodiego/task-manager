@@ -7,7 +7,7 @@ export const loginMdware = (req:Request,res:Response,next:NextFunction) =>{
   let isValidRequest = loginValidate(req.body);
 
   if(!isValidRequest){
-    return res.status(400).json({error:"The request doesnt have the correct structure"});
+    return res.status(400).json({errors:loginValidate.errors?.map((error)=>error.message)});
   }
   else{
     return next();
