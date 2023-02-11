@@ -289,7 +289,41 @@ export const updateUser = async(req:Request,res:Response) => {
 
 
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
-export const deleteUser = (req:Request,res:Response) => {
-  res.json({result:"User deleted correctly"});
+//! Documentation deleteUser
+/*This function is an exported function in TypeScript that deletes a user in a backend application. Here is a detailed description of each step in the function:
+
+  1- It retrieves the username from the params object in the HTTP request.
+
+  2- It uses the findOne method of the UserModel to find a user in the database with the specified username. If the user is not found, it returns a 404 status code along with a message indicating that the user was not found.
+
+  3- If the user is found, it uses the deleteOne method of the UserModel to delete the user from the database.
+
+  4- After the user has been deleted, it removes the JWT token from the response using the clearCookie method.
+
+  5- Finally, it returns a JSON response with a success message indicating that the user was removed correctly.
+
+In case of any error, it returns a 500 status code with a JSON response indicating an internal error.*/
+export const deleteUser = async(req:Request,res:Response) => {
+  try{
+
+    //Get the username
+    let {username} = req.params;
+
+    // Find the user in the database
+    let user = await UserModel.findOne({username});
+    if(!user){
+      return res.status(404).json(`User ${username} not found`)
+    }
+
+    //If the user exist delete it
+    await UserModel.deleteOne({username});
+    
+    // Now remove the token
+    res.clearCookie("jwt");
+    return res.json({result:`User ${username} was removed correctly`});
+  }
+  catch(error){
+    return res.status(500).json(internalError);
+  }
 };
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------

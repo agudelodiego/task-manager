@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "tscw":"tsc --watch",
     "dev": "nodemon ./dist/index.js"
   },
   "keywords": [],
