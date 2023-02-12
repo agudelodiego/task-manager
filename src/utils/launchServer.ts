@@ -13,7 +13,7 @@ import { connectDB } from "../db/connect";
 import { showconfig } from "./showconfig";
 
 // Typescript interfaces
-import { Endpoint } from "../interfaces/endpoint";
+import { Endpoint } from "../interfaces/Endpoint";
 
 // This function will do routin for each endpoint
 import { appRouter } from "./appRouter";

@@ -1,22 +1,15 @@
+//Interfaces
+import { Request, Response } from "express";
+import { jwtconfig } from "../interfaces/Jwt";
+
 // Model
 import { UserModel } from "../models/user.model";
 
-//Interfaces
-import { loginData } from "../interfaces/login";
-import { authJWT, JWTconfig } from "../interfaces/JWT";
-import { signupData } from "../interfaces/signup";
-import { Request, Response } from "express";
-
-// Library for encryp the passwords
-import argon2 from "argon2";
-
-// Utils
+// Some utils
 import { generateJWT } from "../utils/generateJWT";
-import { internalError } from "../utils/errors";
+import { SendResponse } from "../utils/Responses";
+import {internalError} from "../utils/errors"
 
-// JWT library
-import { jwtVerify } from "jose";
-import { KEY } from "../utils/KEY";
 
 
 
@@ -27,15 +20,26 @@ import { KEY } from "../utils/KEY";
 export const searchUsers = async (req:Request,res:Response) => {
   try{
     let {username} = req.query;
-    const users = await UserModel.find({ username: { $regex: new RegExp(`^${username}.*`, 'i') } }, "username email");
-    if(users.length < 1){
-      return res.status(404).json({error:`Not found user with username: ${username}`})
+    if(!username){
+      return SendResponse(res,204,"")
     }
-    return res.json(users);
+
+    const users = await UserModel.find({ 
+      username: { 
+        $regex: new RegExp(`${username}`, 'i') 
+      } 
+    }, "username email -_id");
+    if(users.length < 1){
+      let errors = [`Not found user with username: ${username}`]
+      return SendResponse(res,404,{errors});
+    }
+
+    return SendResponse(res,200,users);
   }
   catch(error){
-    console.log(`Error in users.controller.ts -> searchUsers - 35 ${error} `);
-    return res.status(500).json(internalError);
+    console.log(`Error in users.controller.ts -> searchUsers - 35 ${error}`);
+    let errors = [internalError]
+    return SendResponse(res,500,{errors});
   }
 };
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,8 +48,10 @@ export const searchUsers = async (req:Request,res:Response) => {
 
 
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Documentation signup:
+// Documentation signup:
 /* handles the process of registering a new user. It does so by:
+
+  !Note: When the user is created, his password will encrypt automatically using argon2 library
 
   1- Destructuring the request body to extract the values for "username", "email", and "password".
 
@@ -53,19 +59,18 @@ export const searchUsers = async (req:Request,res:Response) => {
 
   3- Checking if the username already exists in the database by using the UserModel to findOne with the username. If it exists, the function returns a 409 Conflict error with a message of "Username already exists".
 
-  4- Hashing the password using argon2.hash and creating a new user in the database with UserModel.create and the extracted "username", "email", and hashed password.
+  4- If the user is successfully created, the function returns a 201 Created status and the newly created username and email.
 
-  5- If the user is successfully created, the function returns a 201 Created status and the newly created username.
-
-  6- In the event of an error, a message is logged with the error and a 500 Internal Server Error is returned to the client with an "internalError" message.*/
+  5- In the event of an error, a message is logged with the error and a 500 Internal Server Error is returned to the client with an "internalError" message.*/
 export const signup = async (req:Request,res:Response) =>{
   try{
-    let {username,email,password}:signupData = req.body;
+    let {username,email} = req.body;
 
     // First validate if the username or email alredy exist in database
     let emailExist = await UserModel.findOne({email});
     if(emailExist){
-      return res.status(409).json({error:"Email alredy exist"})
+      let errors = ["Email alredy exist"]
+      return SendResponse(res,409,{errors})
     }
 
     // Now validate if the username alredy exist
@@ -73,17 +78,15 @@ export const signup = async (req:Request,res:Response) =>{
     if(usernameExist){
       return res.status(409).json({error:"Username alredy exist"})
     }
-
-    // Now lets encrypt the password and create the new user
-    let hashedPassword = await argon2.hash(password);
     
-
-    let newUser = await UserModel.create({username,email,password:hashedPassword});
-    return res.status(201).json(newUser.username);
+    let newUser = new UserModel(req.body);
+    await newUser.save()
+    return SendResponse(res,201,{username:newUser.username,email:newUser.email});
   }
   catch(error){
     console.log(`Error in user.controller.ts -> signup - 54 ${error}`)
-    return res.status(500).json(internalError);
+    let errors = [internalError];
+    return SendResponse(res,500,{errors});
   }
 };
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,12 +95,12 @@ export const signup = async (req:Request,res:Response) =>{
 
 
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
-//! Documentation loginn:
+// Documentation login:
 /*is an asynchronous function in the user controller that allows users to log in to the application. It performs the following tasks:
 
   1- Extracts email and password from the request body.
 
-  2- Searches for the user in the database by email. If the user is not found, returns a 401 error with an error message saying "Email or password incorrect".
+  2- Verify the password and email. If the user is not found or password dont match, returns a 401 error with an error message saying "Email or password incorrect".
 
   3- Validates the password provided by the client using the Argon2 library. If the password is not valid, returns a 401 error with an error message saying "Email or password incorrect".
 
@@ -110,53 +113,43 @@ export const signup = async (req:Request,res:Response) =>{
   7- Returns the JWT to the client.
 
 In case of any error, it logs the error message in the console and returns a 500 error with a predefined internal error message.*/
-export const login = async (req:Request,res:Response) => {
+export const login = async(req:Request, res:Response) =>{
+
   try{
-    let {email,password}:loginData = req.body;
-    
-    // Fin the user in database
-    let user = await UserModel.findOne({email});
 
+    // Get email and password from body
+    let {email,password} = req.body
 
-    if(!user){
-      return res.status(401).json({errors:"Email or Password incorrect"});
+    // Check if the password is correct
+    let isValidPassword = await UserModel.verifyPassword(email,password);
+    if(!isValidPassword){
+      let errors = ["Email or password incorrect"];
+      return SendResponse(res,401,{errors});
     }
-    else{
 
-      // Validate the password
-      let isValidPassword = await argon2.verify(user.password,password);
+    // If the password is correct, lets generate jwt and set in cookies
+    let config:jwtconfig = {
+      payload:{email},
+      header:{
+        alg:"HS256",
+        typ:"jwt"
+      },
+      expiration:"30d"
+    };
+    let jwt = await generateJWT(config);
+    res.cookie("jwt",jwt,{
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días en milisegundos
+      httpOnly: true 
+    });
 
-      if(!isValidPassword) {
-        return res.status(401).json({error:"Email or password incorrect"});
-      }
-
-      // Create config object ant then pass it to generateJWT function
-      let config:JWTconfig = {
-        payload:{email},
-        header:{
-          alg:"HS256",
-          typ:"jwt"
-        },
-        expiration:"30d"
-      };
-
-      // Now generate our token
-      let jwt = await generateJWT(config);
-
-      // Set jwt in the browser cookies
-      res.cookie("jwt",jwt,{
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 días en milisegundos
-        httpOnly: true 
-      });
-
-      return res.json(jwt);
-    }
+    return SendResponse(res,200,{jwt});
   }
   catch(error){
     console.log(`Error in user.controller.ts -> login -95 ${error}`);
-    return res.status(500).json(internalError);
+    let errors = [internalError];
+    return SendResponse(res,500,{errors});
   }
-};
+}
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -167,7 +160,8 @@ export const login = async (req:Request,res:Response) => {
 //! logout --> I think it dont need documentation
 export const logout = (req:Request,res:Response) =>{
   res.clearCookie("jwt");
-  return res.status(200).json({message:"Logout successful"})
+  let message = "Logout successful";
+  return SendResponse(res,200,{message});
 };
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -191,17 +185,19 @@ export const logout = (req:Request,res:Response) =>{
 export const getUser = async(req:Request,res:Response) => {
   try{
     let {username} = req.params;
-    let user = await UserModel.findOne({username},"username email");
+    let user = await UserModel.findOne({username},"-password");
 
     if(!user){
-      return res.status(404).json({error:`Not found user with username: ${username}`})
+      let errors = [`Not found user with username: ${username}`]
+      return SendResponse(res,404,{errors});
     }
 
-    return res.send(user);
+    return SendResponse(res,200,user)
   }
   catch(error){
     console.log(`Error in user.controller.ts -> getUser -116 ${error}`);
-    return res.status(500).json(internalError);
+    let errors = [internalError]
+    return SendResponse(res,500,{errors});
   }
 };
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -225,12 +221,11 @@ export const getUser = async(req:Request,res:Response) => {
   5- Removes the old JWT token and generates a new JWT token.
 
   5- Returns a response with a message indicating that the user has been updated successfully..*/
-export const updateUser = async(req:Request,res:Response) => {
+/* export const updateUser = async(req:Request,res:Response) => {
   try{
 
-    // Get the user email and search the in the database
-    let  {jwt}:authJWT = req.cookies
-    let {payload:{email}} = await jwtVerify(jwt,KEY);
+    let email = await getEmail(req);
+
     let user = await UserModel.findOne({email});
     if(!user){
       return res.status(404).json({errors:[`User with the ${email} not found`]});
@@ -258,7 +253,7 @@ export const updateUser = async(req:Request,res:Response) => {
     res.clearCookie("jwt");
 
     // Ant the generate another token
-    let config:JWTconfig = {
+    let config = {
       payload:{email:user.email},
       header:{
         alg:"HS256",
@@ -281,7 +276,7 @@ export const updateUser = async(req:Request,res:Response) => {
     return res.status(500).json(internalError);
   }
   
-};
+}; */
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -303,8 +298,11 @@ export const updateUser = async(req:Request,res:Response) => {
   5- Finally, it returns a JSON response with a success message indicating that the user was removed correctly.
 
 In case of any error, it returns a 500 status code with a JSON response indicating an internal error.*/
-export const deleteUser = async(req:Request,res:Response) => {
+/* export const deleteUser = async(req:Request,res:Response) => {
   try{
+
+    // Get email in the from jwt
+    let email = await getEmail(req);
 
     //Get the username
     let {username} = req.params;
@@ -313,6 +311,9 @@ export const deleteUser = async(req:Request,res:Response) => {
     let user = await UserModel.findOne({username});
     if(!user){
       return res.status(404).json(`User ${username} not found`)
+    }
+    if(user.email != email){
+      return res.status(409).json({error:"You only can delete your own profile. Your try to delete another profile"});
     }
 
     //If the user exist delete it
@@ -325,5 +326,5 @@ export const deleteUser = async(req:Request,res:Response) => {
   catch(error){
     return res.status(500).json(internalError);
   }
-};
+}; */
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------

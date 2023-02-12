@@ -1,40 +1,75 @@
-import mongoose from "mongoose";
-import { User } from "../interfaces/userInterfaces";
+// Typegoose functionality
+import { 
+  prop,
+  getModelForClass, 
+  Ref, 
+  pre, 
+  ReturnModelType 
+} from "@typegoose/typegoose"
+
+// Models
+import { Chat } from "./chat.model"
+import { Task } from "./task.model"
+
+// Library for encryp the passwords
+import argon2 from "argon2";
 
 
-export const userSchema = new mongoose.Schema<User>({
-  username:{
-    type:String,
-    unique:true,
-    required:true,
-    trim:true,
-    min:[2,'User name must have more than 2 characters'],
-    max:[40,'User name cannot have more than 40 characters'],
-  },
-  email:{
-    type:String,
-    unique:true,
-    required:true,
-    trim:true,
-    min:[11,'Email must have more than 11 characters'],
-    max:[50,'Email cannot have more than 50 characters'],
 
-  },
-  password:{
-    type:String,
+@pre<User>("save",async function(){
+
+  // Before the user is created his password will encrypt using argon2 library
+  this.password = await argon2.hash(this.password);
+})
+export class User {
+  @prop({ 
     required:true,
-    trim:true,
-    min:[5,'Password name must have more than 5 characters'],
-    max:[40,'Password cannot have more than 40 characters'],
-  },
-  confirmation:{
-    type:Boolean,
+    minlength:2,
+    maxlength:10,
+    unique:true
+  })
+  username: string
+
+  @prop({ 
+    required:true,
+    trim: true,
+    unique:true
+  })
+  email: string
+
+  @prop({ 
+    required:true,
+    minlength: 6
+  })
+  password: string
+
+  @prop({
+    required:true,
     default:false
-  },
-  friends:[String],
-  chats:[String],
-  tasks:[String]
-});
+  })
+  verifiedEmail: boolean
 
+  @prop({ ref: "User" })
+  friends: Ref<User>[]
 
-export const UserModel = mongoose.model('User',userSchema);
+  @prop({ ref: "Task" })
+  tasks: Ref<Task>[]
+
+  @prop({ ref: "Chat" })
+  chats: Ref<Chat>[]
+
+  static async verifyPassword(this: ReturnModelType<typeof User>, email:string, password:string){
+
+    // Find the user
+    let user = await this.findOne({email});
+
+    // If user exist will verify the password
+    if(user){
+      return argon2.verify(user.password,password);
+    }
+
+    return false;
+  }
+
+};
+export const UserModel = getModelForClass(User);

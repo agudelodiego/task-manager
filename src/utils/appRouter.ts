@@ -1,5 +1,5 @@
 //Import our interfaces
-import { Endpoint } from "../interfaces/endpoint";
+import { Endpoint } from "../interfaces/Endpoint";
 import { Express } from "express";
 
 

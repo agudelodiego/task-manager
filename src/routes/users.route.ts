@@ -1,17 +1,27 @@
 import { Router } from "express";
 
+// Controllers
+import { 
+  login,
+  logout,
+  searchUsers,
+  signup
+} from "../controllers/users.controller";
+import { auth } from "../middlewares/auth";
+
+// Middlewares
+import { validateBody } from "../middlewares/validateSchema";
+
+// Schemas
+import { signupValidator, loginValidator } from "../schemas/user.schema";
 
 
-// Import some middlewares
-import { loginMdware } from "../middlewares/login.mdware";
-import { signupMdware } from "../middlewares/signup.mdware";
-import { searchUserMdware, updateUserMdware } from "../middlewares/users.mdware";
-import { authJWTmdware } from "../middlewares/authJWT.mdware";
+
 
 
 
 // Import our controllers
-import {
+/* import {
   getUser,
   signup,
   deleteUser,
@@ -20,7 +30,7 @@ import {
   searchUsers,
   logout
 } from "../controllers/users.controller";
-
+ */
 
 
 // Create our router
@@ -29,10 +39,16 @@ export const usersRouter = Router();
 
 
 // Routes
-usersRouter.route("/search").get(authJWTmdware,searchUserMdware,searchUsers);
-usersRouter.route("/signup").post(signupMdware,signup);
-usersRouter.route("/login").post(loginMdware,login);
+/* usersRouter.route("/search").get(searchUsers);
+usersRouter.route("/signup").post(signup);
+usersRouter.route("/login").post(login);
 usersRouter.route("/logout").get(logout);
-usersRouter.route("/:username").get(authJWTmdware,getUser);
-usersRouter.route("/:username").patch(authJWTmdware,updateUserMdware,updateUser);
-usersRouter.route("/:username").delete(authJWTmdware,deleteUser);
+usersRouter.route("/:username").get(getUser);
+usersRouter.route("/:username").patch(updateUser);
+usersRouter.route("/:username").delete(deleteUser); */
+
+
+usersRouter.get("/search", auth, searchUsers);
+usersRouter.get("/logout", auth, logout);
+usersRouter.post("/signup", validateBody(signupValidator), signup);
+usersRouter.post("/login", validateBody(loginValidator), login);

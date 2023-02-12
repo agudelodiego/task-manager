@@ -1,25 +1,38 @@
-import mongoose from "mongoose";
+import { prop,getModelForClass, Ref } from "@typegoose/typegoose";
+import { User } from "./user.model";
 
 
-export const chatSchema = new mongoose.Schema({
-  name:{
-    type:String,
-    trim:true,
-    min:[2,'Name must have more than 2 characters'],
-    max:[30,'Name cannot have more then 30 characters']
-  },
-  chat_members:{
-    type:Array,
-    required:[true,'The chat must have any memeber']
-  },
-  messges:[
-    {
-      sendBy:String,
-      content:String,
-      date:Date
-    }
-  ]
-});
+export class Message {
+  @prop({ 
+    ref: "User",
+    required: true
+  })
+  sendBy: Ref<User>
+
+  @prop({ 
+    required:true,
+    minlength: 1
+  })
+  content: string
+
+  @prop({ default: Date.now() })
+  date: Date
+}
 
 
-export const ChatModel = mongoose.model('Chat',chatSchema)
+export class Chat {
+  @prop({ required:true })
+  name: string
+
+  @prop({ 
+    ref: "User",
+    required: true
+  })
+  members: Ref<User>[]
+
+  @prop({ type: ()=> [Message] })
+  messages: Message[]
+};
+
+
+export const ChatModel = getModelForClass(Chat);

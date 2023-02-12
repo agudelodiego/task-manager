@@ -2,7 +2,7 @@
 import { launchServer } from "./utils/launchServer";
 
 // Interfaces
-import { Endpoint } from "./interfaces/endpoint";
+import { Endpoint } from "./interfaces/Endpoint";
 
 // API Routes
 import { tasksRouter } from "./routes/tasks.route";

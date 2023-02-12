@@ -1,5 +1,5 @@
 //Import the intefaces
-import { Endpoint } from "../interfaces/endpoint";
+import { Endpoint } from "../interfaces/Endpoint";
 
 
 //This function just will to show in the terminal information about the server
