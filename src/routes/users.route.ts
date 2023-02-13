@@ -1,36 +1,24 @@
+// Import express router
 import { Router } from "express";
 
 // Controllers
 import { 
+  deleteUser,
+  getUser,
   login,
   logout,
   searchUsers,
-  signup
+  signup,
+  updateUser
 } from "../controllers/users.controller";
-import { auth } from "../middlewares/auth";
 
 // Middlewares
 import { validateBody } from "../middlewares/validateSchema";
+import { auth } from "../middlewares/auth";
 
 // Schemas
-import { signupValidator, loginValidator } from "../schemas/user.schema";
+import { signupValidator, loginValidator, updateUserValidator } from "../schemas/user.schema";
 
-
-
-
-
-
-// Import our controllers
-/* import {
-  getUser,
-  signup,
-  deleteUser,
-  updateUser,
-  login,
-  searchUsers,
-  logout
-} from "../controllers/users.controller";
- */
 
 
 // Create our router
@@ -39,16 +27,10 @@ export const usersRouter = Router();
 
 
 // Routes
-/* usersRouter.route("/search").get(searchUsers);
-usersRouter.route("/signup").post(signup);
-usersRouter.route("/login").post(login);
-usersRouter.route("/logout").get(logout);
-usersRouter.route("/:username").get(getUser);
-usersRouter.route("/:username").patch(updateUser);
-usersRouter.route("/:username").delete(deleteUser); */
-
-
 usersRouter.get("/search", auth, searchUsers);
 usersRouter.get("/logout", auth, logout);
 usersRouter.post("/signup", validateBody(signupValidator), signup);
 usersRouter.post("/login", validateBody(loginValidator), login);
+usersRouter.get("/:username", auth, getUser);
+usersRouter.patch("/:username", auth, validateBody(updateUserValidator), updateUser);
+usersRouter.delete("/:username",auth,deleteUser);

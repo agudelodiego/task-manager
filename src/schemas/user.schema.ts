@@ -36,7 +36,6 @@ export const userSchema = {
       type: "array",
       items: {
         type: "string",
-        required: [],
         errorMessage:"Each friends item must be an string"
       },
       
@@ -45,7 +44,6 @@ export const userSchema = {
       type: "array",
       items: {
         type: "string",
-        required: [],
         errorMessage:"Each task item must be an string"
       },
     },
@@ -53,12 +51,11 @@ export const userSchema = {
       type: "array",
       items: {
         type: "string",
-        required: [],
         errorMessage:"Each chat item must be an string"
       },
     },
   },
-  required:["username", "email", "password"],
+  required:[],
   additionalProperties: false
 };
 export const userValidator = ajv.compile(userSchema);
@@ -111,3 +108,27 @@ const loginSchema = {
   additionalProperties: false
 };
 export const loginValidator = ajv.compile(loginSchema);
+
+
+
+const updateUserSchema = {
+  type:"object",
+  properties:{
+    password:{
+      type:"string",
+      maxLength: 10,
+      minLength: 2,
+      errorMessage: "You must provide an username with at least 2 and at most 10 characters"
+    },
+    forUpdate:{
+      $ref: "#/definitions/userSchema",
+      errorMessage: "You must provide the properties that you want to update"
+    }
+  },
+  required:["password", "forUpdate"],
+  additionalProperties: false,
+  definitions: {
+    userSchema: userSchema
+  }
+};
+export const updateUserValidator = ajv.compile(updateUserSchema);

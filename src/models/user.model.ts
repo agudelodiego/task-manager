@@ -58,6 +58,8 @@ export class User {
   @prop({ ref: "Chat" })
   chats: Ref<Chat>[]
 
+
+
   static async verifyPassword(this: ReturnModelType<typeof User>, email:string, password:string){
 
     // Find the user
@@ -69,7 +71,20 @@ export class User {
     }
 
     return false;
-  }
+  };
+
+  
+
+  static async updateUser(this: ReturnModelType<typeof User>,email:string,forUpdate:object){
+
+    let result = this.findOneAndUpdate(
+      {email},
+      forUpdate,
+      {new:true}
+    );
+    return result;
+
+  };
 
 };
 export const UserModel = getModelForClass(User);

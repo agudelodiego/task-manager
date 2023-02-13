@@ -9,6 +9,7 @@ import { UserModel } from "../models/user.model";
 import { generateJWT } from "../utils/generateJWT";
 import { SendResponse } from "../utils/Responses";
 import {internalError} from "../utils/errors"
+import { getEmail } from "../utils/getEmail";
 
 
 
@@ -37,7 +38,7 @@ export const searchUsers = async (req:Request,res:Response) => {
     return SendResponse(res,200,users);
   }
   catch(error){
-    console.log(`Error in users.controller.ts -> searchUsers - 35 ${error}`);
+    console.log(`Error in users.controller.ts -> searchUsers ${error}`);
     let errors = [internalError]
     return SendResponse(res,500,{errors});
   }
@@ -84,7 +85,7 @@ export const signup = async (req:Request,res:Response) =>{
     return SendResponse(res,201,{username:newUser.username,email:newUser.email});
   }
   catch(error){
-    console.log(`Error in user.controller.ts -> signup - 54 ${error}`)
+    console.log(`Error in user.controller.ts -> signup ${error}`)
     let errors = [internalError];
     return SendResponse(res,500,{errors});
   }
@@ -145,7 +146,7 @@ export const login = async(req:Request, res:Response) =>{
     return SendResponse(res,200,{jwt});
   }
   catch(error){
-    console.log(`Error in user.controller.ts -> login -95 ${error}`);
+    console.log(`Error in user.controller.ts -> login ${error}`);
     let errors = [internalError];
     return SendResponse(res,500,{errors});
   }
@@ -182,7 +183,7 @@ export const logout = (req:Request,res:Response) =>{
   4- Otherwise, returns the information about the user.
 
   5- In case of an error, logs the error message and returns a 500 internal server error.*/
-export const getUser = async(req:Request,res:Response) => {
+export const getUser = async(req:Request,res:Response) => { 
   try{
     let {username} = req.params;
     let user = await UserModel.findOne({username},"-password");
@@ -192,10 +193,10 @@ export const getUser = async(req:Request,res:Response) => {
       return SendResponse(res,404,{errors});
     }
 
-    return SendResponse(res,200,user)
+    return SendResponse(res,200,user);
   }
   catch(error){
-    console.log(`Error in user.controller.ts -> getUser -116 ${error}`);
+    console.log(`Error in user.controller.ts -> getUser ${error}`);
     let errors = [internalError]
     return SendResponse(res,500,{errors});
   }
@@ -221,33 +222,35 @@ export const getUser = async(req:Request,res:Response) => {
   5- Removes the old JWT token and generates a new JWT token.
 
   5- Returns a response with a message indicating that the user has been updated successfully..*/
-/* export const updateUser = async(req:Request,res:Response) => {
+export const updateUser = async(req:Request,res:Response) => {
   try{
 
     let email = await getEmail(req);
 
-    let user = await UserModel.findOne({email});
-    if(!user){
-      return res.status(404).json({errors:[`User with the ${email} not found`]});
+    if(!email){
+      let errors = [`User with the ${email} not found`];
+      return res.status(404).json({errors});
     }
 
     // lets get the password provided from the client in the body and verify
     let {password,forUpdate} = req.body;
-    let isValidPassword = await argon2.verify(user.password,password);
+    let isValidPassword = await UserModel.verifyPassword(email,password)
     if(!isValidPassword){
-      return res.status(401).json({error:"Password incorrect"});
+      let errors = ["Email or password incorrect"]
+      return SendResponse(res,401,{errors});
     }
 
     // Lets verify for update object
     if(Object.keys(forUpdate).length < 1){
-      return res.status(200).end();
+      return SendResponse(res,204,"");
     }
 
-    // Update the user information
-    for(let i in forUpdate){
-      user.set(i, forUpdate[i]);
-    };
-    await user.save();
+
+    let user = await UserModel.updateUser(email,forUpdate);
+    if(!user?.email){
+      let errors = ["Error updating the profile"]
+      return SendResponse(res,500,{errors});
+    }
 
     // Now remove the token
     res.clearCookie("jwt");
@@ -269,14 +272,21 @@ export const getUser = async(req:Request,res:Response) => {
       httpOnly: true 
     })
 
-    return res.json({result:"User updated correctly"});
+    let userUpdated = {
+      email: user.email,
+      username: user.username,
+      friends: user.friends,
+      tasks: user.tasks,
+      chats: user.chats
+    }
+    return SendResponse(res,200,{userUpdated});
   }
   catch(error){
     console.log(`Error in user.controller.ts -> updateUser -178 ${error}`);
     return res.status(500).json(internalError);
   }
   
-}; */
+};
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -298,7 +308,7 @@ export const getUser = async(req:Request,res:Response) => {
   5- Finally, it returns a JSON response with a success message indicating that the user was removed correctly.
 
 In case of any error, it returns a 500 status code with a JSON response indicating an internal error.*/
-/* export const deleteUser = async(req:Request,res:Response) => {
+export const deleteUser = async(req:Request,res:Response) => {
   try{
 
     // Get email in the from jwt
@@ -310,10 +320,12 @@ In case of any error, it returns a 500 status code with a JSON response indicati
     // Find the user in the database
     let user = await UserModel.findOne({username});
     if(!user){
-      return res.status(404).json(`User ${username} not found`)
+      let errors = [`User ${username} not found`]
+      return SendResponse(res,404,{errors});
     }
     if(user.email != email){
-      return res.status(409).json({error:"You only can delete your own profile. Your try to delete another profile"});
+      let errors = ["You only can delete your own profile. Your try to delete another profile"]
+      return SendResponse(res,409,{errors});
     }
 
     //If the user exist delete it
@@ -321,10 +333,10 @@ In case of any error, it returns a 500 status code with a JSON response indicati
     
     // Now remove the token
     res.clearCookie("jwt");
-    return res.json({result:`User ${username} was removed correctly`});
+    return SendResponse(res,200,{result:`User ${username} was removed correctly`});
   }
   catch(error){
     return res.status(500).json(internalError);
   }
-}; */
+};
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------

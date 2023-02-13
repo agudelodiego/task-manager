@@ -1,5 +1,5 @@
 import { Request } from "express"
-import { jwtVerify } from "jose";
+import { jwtVerify, JWTVerifyResult } from "jose";
 import { KEY } from "./KEY";
 
 
@@ -7,9 +7,20 @@ import { KEY } from "./KEY";
 // This function will get the user email from the jwt in the cookies
 export const getEmail = async(req:Request) => {
 
-  // Get the user email and search the in the database
-  let  {jwt} = req.cookies;
-  let {payload:{email}} = await jwtVerify(jwt,KEY);
-  return email;
+  try{
+    // Get the user email and search the in the database
+    let  {jwt} = req.cookies;
+    let {payload:{email}}:JWTVerifyResult = await jwtVerify(jwt,KEY);
+    
+    if(typeof email == "string"){
+      return email;
+    }
+    else{
+      return false;
+    }
+  }
+  catch(error){
+    return false;
+  }
 
 };
