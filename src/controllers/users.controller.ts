@@ -29,7 +29,7 @@ export const searchUsers = async (req:Request,res:Response) => {
       username: { 
         $regex: new RegExp(`${username}`, 'i') 
       } 
-    }, "username email -_id");
+    }, "username email");
     if(users.length < 1){
       let errors = [`Not found user with username: ${username}`]
       return SendResponse(res,404,{errors});
@@ -77,15 +77,15 @@ export const signup = async (req:Request,res:Response) =>{
     // Now validate if the username alredy exist
     let usernameExist = await UserModel.findOne({username});
     if(usernameExist){
-      return res.status(409).json({error:"Username alredy exist"})
+      return res.status(409).json({error:"Username alredy exist"});
     }
     
     let newUser = new UserModel(req.body);
-    await newUser.save()
-    return SendResponse(res,201,{username:newUser.username,email:newUser.email});
+    await newUser.save();
+    return SendResponse(res,201,{username:newUser.username,email:newUser.email,_id:newUser._id});
   }
   catch(error){
-    console.log(`Error in user.controller.ts -> signup ${error}`)
+    console.log(`Error in user.controller.ts -> signup ${error}`);
     let errors = [internalError];
     return SendResponse(res,500,{errors});
   }
@@ -273,6 +273,7 @@ export const updateUser = async(req:Request,res:Response) => {
     })
 
     let userUpdated = {
+      _id:user._id,
       email: user.email,
       username: user.username,
       friends: user.friends,
@@ -282,8 +283,9 @@ export const updateUser = async(req:Request,res:Response) => {
     return SendResponse(res,200,{userUpdated});
   }
   catch(error){
-    console.log(`Error in user.controller.ts -> updateUser -178 ${error}`);
-    return res.status(500).json(internalError);
+    console.log(`Error in user.controller.ts -> updateUser ${error}`);
+    let errors = [internalError]
+    return SendResponse(res,500,{errors});
   }
   
 };
@@ -336,7 +338,9 @@ export const deleteUser = async(req:Request,res:Response) => {
     return SendResponse(res,200,{result:`User ${username} was removed correctly`});
   }
   catch(error){
-    return res.status(500).json(internalError);
+    console.log(`Error in user.controller.ts -> deleteUser ${error}`);
+    let errors = [internalError]
+    return SendResponse(res,500,{errors});
   }
 };
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------

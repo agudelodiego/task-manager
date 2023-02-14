@@ -15,9 +15,9 @@ export const userSchema = {
   properties: {
     username: {
       type: "string",
-      maxLength: 10,
+      maxLength: 20,
       minLength: 2,
-      errorMessage: "You must provide an username with at least 2 and at most 10 characters"
+      errorMessage: "You must provide an username with at least 2 and at most 20 characters"
     },
     email: {
       type: "string",

@@ -1,5 +1,4 @@
 import {prop,getModelForClass, Ref} from "@typegoose/typegoose";
-import { Chat } from "./chat.model";
 import { User } from "./user.model";
 
 
@@ -7,11 +6,14 @@ export class Task {
   @prop({ 
     required: true,
     minlength: 5,
-    maxlength: 20
+    maxlength: 40
   })
   title: string
 
-  @prop({ required: true })
+  @prop({ 
+    required: true,
+    minlength: 4 
+  })
   description: string
 
   @prop({ 
@@ -45,8 +47,5 @@ export class Task {
     default:false
   })
   done: boolean
-
-  @prop({ ref: "Chat" })
-  chat: Ref<Chat>
 };
 export const TaskModel = getModelForClass(Task);

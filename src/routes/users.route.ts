@@ -26,11 +26,13 @@ export const usersRouter = Router();
 
 
 
-// Routes
-usersRouter.get("/search", auth, searchUsers);
-usersRouter.get("/logout", auth, logout);
+// Routes without auth
 usersRouter.post("/signup", validateBody(signupValidator), signup);
 usersRouter.post("/login", validateBody(loginValidator), login);
+
+// Routes with auth middleware
+usersRouter.get("/search", auth, searchUsers);
+usersRouter.get("/logout", auth, logout);
 usersRouter.get("/:username", auth, getUser);
 usersRouter.patch("/:username", auth, validateBody(updateUserValidator), updateUser);
-usersRouter.delete("/:username",auth,deleteUser);
+usersRouter.delete("/:username", auth, deleteUser);
