@@ -1,7 +1,11 @@
 // Import some interfaces
 import { Request, Response } from "express";
+
+// Models
 import { TaskModel } from "../models/task.model";
 import { UserModel } from "../models/user.model";
+
+// Some utils
 import { internalError } from "../utils/errors";
 import { getEmail } from "../utils/getEmail";
 import { SendResponse } from "../utils/Responses";
@@ -143,7 +147,26 @@ export const updateTask = async(req:Request,res:Response) => {
 
 
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------
-export const deleteTask = (req:Request,res:Response) => {
-  res.json({result:"Task deleted correctly"})
+export const deleteTask = async(req:Request,res:Response) => {
+  try{
+
+    // Get the task id and the user email
+    let {_id} = req.params;
+    let email = await getEmail(req);
+
+    let user = await UserModel.findOne({email});
+    
+    let task = await TaskModel.findOneAndDelete({ 
+      $and: [
+        { members: { $in: [user?._id] } },
+        { _id }
+      ]
+    })
+
+    return SendResponse(res,200,task);
+  }
+  catch(errors){
+    return SendResponse(res,400,{errors});
+  }
 }
 //* -------------------------------------------------------------------------------------------------------------------------------------------------------------

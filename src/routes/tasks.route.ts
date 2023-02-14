@@ -8,6 +8,7 @@ import { validateBody } from "../middlewares/validateSchema";
 // Import controllers
 import { 
   createTask, 
+  deleteTask, 
   getMyTasks, 
   searchTasks,
   updateTask
@@ -30,3 +31,4 @@ tasksRouter.get("/", auth, getMyTasks);
 tasksRouter.post("/", auth, validateBody(createTaskValidator), createTask);
 tasksRouter.get("/search", auth, searchTasks);
 tasksRouter.patch("/:_id", auth, validateBody(taskValidator),updateTask);
+tasksRouter.delete("/:_id",auth, deleteTask);
