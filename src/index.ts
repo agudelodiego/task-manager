@@ -10,7 +10,6 @@ import { usersRouter } from "./routes/users.route";
 import { chatsRouter } from "./routes/chats.route";
 
 
-
 // ENDPOINTS
 const appRoutes:Endpoint[] = [
   {
